@@ -1,6 +1,5 @@
-# CD (ADR-001 deployment model): Frontend → Vercel (Git integration), Backend + Worker → Render.
-# Runs only after CI succeeded for a push to main. Render runs `alembic upgrade head` as the
-# pre-deploy command (see render.yaml), so migrations ship together with the code.
+# CD: Frontend → Vercel (Git integration), Backend API → Render Free.
+# Run migrations here because Render Free does not support pre-deploy commands.
 name: CD Pipeline
 
 on:
@@ -18,15 +17,48 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Trigger Render deploy (API + worker) for the commit CI tested
+      - name: Check required production secrets
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          API_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}
+          ADMIN_EMAIL: ${{ secrets.PRODUCTION_BOOTSTRAP_ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.PRODUCTION_BOOTSTRAP_ADMIN_PASSWORD }}
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$API_HOOK" ] || [ -z "$ADMIN_EMAIL" ] || [ -z "$ADMIN_PASSWORD" ]; then
+            echo "::error::Configure the production database, bootstrap admin, and Render API deploy secrets."
+            exit 1
+          fi
+
+      - name: Check out the commit that passed CI
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements*.txt
+
+      - name: Install backend dependencies
+        run: pip install -r backend/requirements-dev.txt
+
+      - name: Run production migrations and seed
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          BOOTSTRAP_ADMIN_EMAIL: ${{ secrets.PRODUCTION_BOOTSTRAP_ADMIN_EMAIL }}
+          BOOTSTRAP_ADMIN_PASSWORD: ${{ secrets.PRODUCTION_BOOTSTRAP_ADMIN_PASSWORD }}
+          ENVIRONMENT: production
+        run: |
+          export JWT_SECRET="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+          python -m alembic upgrade head
+          python ../database/seeders/seed.py
+
+      - name: Trigger Render API deploy for the commit CI tested
         env:
           API_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}
-          WORKER_HOOK: ${{ secrets.RENDER_WORKER_DEPLOY_HOOK_URL }}
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          if [ -z "$API_HOOK" ] || [ -z "$WORKER_HOOK" ]; then
-            echo "::warning::Render deploy hook secrets are not configured; skipping deploy."
-            exit 0
-          fi
           curl --fail --silent --show-error -X POST "${API_HOOK}&ref=${SHA}"
-          curl --fail --silent --show-error -X POST "${WORKER_HOOK}&ref=${SHA}"

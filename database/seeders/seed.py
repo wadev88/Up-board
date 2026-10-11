@@ -491,7 +491,7 @@ def seed_demo(db: Session) -> None:
     post(
         officer,
         PostType.announcement,
-        "urgent",
+        "announcement",
         "ปิดถนนหน้าหอประชุมพญางำเมือง",
         "งดใช้ถนนหน้าหอประชุมชั่วคราวเนื่องจากซ่อมท่อประปา กรุณาใช้เส้นทางเลี่ยง",
         priority=Priority.urgent,
@@ -500,7 +500,7 @@ def seed_demo(db: Session) -> None:
     post(
         student,
         PostType.general,
-        "recommendations",
+        "general",
         "ร้านข้าวมันไก่หน้ามอ อร่อยมาก",
         "แนะนำร้านข้าวมันไก่ตรงข้ามประตูหน้า ราคานิสิต อิ่มคุ้ม",
         created_at=now - timedelta(hours=1),
