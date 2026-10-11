@@ -5,7 +5,7 @@
 # Frontend is deployed on Vercel (root directory: frontend/, env NEXT_PUBLIC_API_URL,
 # NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY).
 # Secrets marked `sync: false` must be entered in the Render dashboard — never in Git.
-
+ 
 services:
   - type: web
     name: upboard-api
@@ -15,6 +15,7 @@ services:
     plan: free
     autoDeploy: false            # deployed by .github/workflows/cd.yml after CI passes
     healthCheckPath: /api/v1/health
+    preDeployCommand: alembic upgrade head && python /app/database/seeders/seed.py
     envVars: &backend-env
       - key: ENVIRONMENT
         value: production
@@ -29,7 +30,8 @@ services:
       - key: SUPABASE_JWT_SECRET
         sync: false              # only for projects still on the legacy shared JWT secret
       - key: PASSWORD_SIGNUP_ENABLED
-        value: "false"           # new users sign in with Google @up.ac.th
+        value: "true"            # registration is mandatory (email + password + faculty + programme);
+                                 # Google sign-in only works for registered accounts and verifies the email
       - key: JWT_SECRET
         generateValue: true
       - key: CORS_ORIGINS
@@ -45,13 +47,28 @@ services:
       - key: STORAGE_BACKEND
         value: s3                # local disk is wiped on redeploy (ADR-001 trade-off #6)
       - key: S3_BUCKET
-        sync: false
+        sync: false              # Supabase Storage bucket name (create it first; public if S3_PUBLIC_BASE_URL is the public URL)
       - key: S3_ENDPOINT_URL
-        sync: false
+        sync: false              # https://<ref>.supabase.co/storage/v1/s3
+      - key: S3_REGION
+        sync: false              # the Supabase project region, e.g. ap-southeast-1 (needed to sign requests)
       - key: S3_PUBLIC_BASE_URL
-        sync: false
+        sync: false              # https://<ref>.supabase.co/storage/v1/object/public/<bucket>
+      - key: AWS_ACCESS_KEY_ID
+        sync: false              # boto3 reads these two from the environment: Supabase > Storage > S3 Connection > access key
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false              # secret — Render dashboard only, never in Git
       - key: BOOTSTRAP_ADMIN_EMAIL
         sync: false
       - key: BOOTSTRAP_ADMIN_PASSWORD
         sync: false
-
+ 
+  - type: worker
+    name: upboard-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: starter                # background workers are not available on the free plan
+    autoDeploy: false
+    dockerCommand: python -m app.worker
+    envVars: *backend-env
