@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UP Board - Community & Expiration System</title>
+    <!-- Tailwind CSS v4 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Google Font: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f8fafc; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-100/70 font-th antialiased min-h-screen relative text-slate-800 flex flex-col">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white/80 backdrop-blur-md border-b border-slate-200/70 h-16 flex items-center justify-between px-6 fixed top-0 left-0 right-0 z-30 shadow-2xs">
+        <div class="flex items-center space-x-3 cursor-pointer group" onclick="switchView('feed')">
+            <div class="w-9 h-9 bg-purple-800 rounded-xl flex items-center justify-center text-white text-xs font-bold shadow-sm shadow-purple-900/20 group-hover:bg-purple-900 transition-colors">
+                มพ
+            </div>
+            <span class="text-xl font-bold tracking-tight text-slate-900 group-hover:text-purple-800 transition-colors">[UP Board]</span>
+        </div>
+
+        <!-- Auth / Profile Dynamic Area -->
+        <div id="navUserArea" class="flex items-center space-x-3">
+            <!-- Rendered via JavaScript -->
+        </div>
+    </header>
+
+    <div class="flex pt-16 min-h-screen">
+        
+        <!-- Sidebar Navigation -->
+        <aside id="sidebarLinks" class="w-64 bg-white/60 backdrop-blur-md border-r border-slate-200/70 fixed top-16 bottom-0 p-4 space-y-1.5 z-20 hidden md:block">
+            <div class="px-3 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">หมวดหมู่ข่าวสาร</div>
+            <a href="#" data-category="ทั้งหมด" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 bg-purple-100/60 text-purple-800 font-semibold rounded-xl text-sm transition-all shadow-2xs border border-purple-200/50">
+                <span>🏠</span> <span>ทั้งหมด</span>
+            </a>
+            <a href="#" data-category="กิจกรรม" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 rounded-xl text-sm font-medium transition-all">
+                <span>📢</span> <span>กิจกรรม</span>
+            </a>
+            <a href="#" data-category="ของหาย" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 rounded-xl text-sm font-medium transition-all">
+                <span>🔍</span> <span>ของหาย</span>
+            </a>
+            <a href="#" data-category="บอกต่อ" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 rounded-xl text-sm font-medium transition-all">
+                <span>✨</span> <span>บอกต่อ</span>
+            </a>
+            <a href="#" data-category="เรื่องเร่งด่วน" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 rounded-xl text-sm font-medium transition-all">
+                <span>🚨</span> <span>เรื่องเร่งด่วน</span>
+            </a>
+            <a href="#" data-category="แจ้งซ่อม" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 text-slate-600 hover:bg-slate-200/50 hover:text-slate-900 rounded-xl text-sm font-medium transition-all">
+                <span>🔧</span> <span>แจ้งซ่อม</span>
+            </a>
+        </aside>
+
+        <!-- VIEW 1: Main Feed Area -->
+        <main id="feedView" class="flex-1 md:ml-64 p-6 md:p-8 space-y-6 max-w-4xl">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200/80">
+                <div>
+                    <h1 id="feedTitle" class="text-2xl font-bold text-slate-900 tracking-tight">Community Board (ทั้งหมด)</h1>
+                    <p class="text-xs text-slate-500 mt-1">พื้นที่แลกเปลี่ยนข้อมูลข่าวสารและกิจกรรม มหาวิทยาลัยพะเยา</p>
+                </div>
+                <button onclick="handleCreatePostClick()" class="bg-purple-700 hover:bg-purple-800 text-white font-medium py-2.5 px-4.5 rounded-xl flex items-center space-x-2 transition-all shadow-sm hover:shadow-purple-900/20 active:scale-95 cursor-pointer text-sm">
+                    <span class="text-base">+</span> <span>สร้างโพสต์ใหม่</span>
+                </button>
+            </div>
+
+            <!-- Feed Post List Container -->
+            <div id="postsContainer" class="space-y-4"></div>
+        </main>
+
+        <!-- VIEW 2: User Profile View -->
+        <main id="profileView" class="flex-1 md:ml-64 p-6 md:p-8 space-y-6 max-w-4xl hidden">
+            <div class="bg-white rounded-3xl border border-slate-200/80 p-6 md:p-8 shadow-xs space-y-6">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
+                    <div class="flex items-center space-x-4">
+                        <div id="profileAvatar" class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-purple-700 to-indigo-600 text-white flex items-center justify-center text-3xl font-bold shadow-md shadow-purple-900/10">
+                            U
+                        </div>
+                        <div>
+                            <h2 id="profileName" class="text-2xl font-bold text-slate-900">ชื่อ-นามสกุล</h2>
+                            <span id="profileRole" class="inline-block px-3 py-1 bg-purple-50 text-purple-700 text-xs font-semibold rounded-full mt-1.5 border border-purple-200/60">
+                                สถานะบัญชี
+                            </span>
+                        </div>
+                    </div>
+                    <button onclick="logout()" class="px-4 py-2 border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-xl text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5">
+                        <span>🚪</span> <span>ออกจากระบบ</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm bg-slate-50/80 p-5 rounded-2xl border border-slate-100">
+                    <div>
+                        <span class="text-xs text-slate-400 font-medium block mb-1">📧 อีเมลผู้ใช้งาน:</span>
+                        <span id="profileEmail" class="font-semibold text-slate-700">-</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-slate-400 font-medium block mb-1">🏫 สังกัด / คณะ:</span>
+                        <span id="profileFaculty" class="font-semibold text-slate-700">-</span>
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-2">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <h3 class="text-lg font-bold text-slate-800">📌 โพสต์ของฉัน</h3>
+                    </div>
+                    <div id="myPostsContainer" class="space-y-3"></div>
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- MODAL 1: Login / Register Modal -->
+    <div id="authModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs transition-opacity" onclick="closeAuthModal()"></div>
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl z-10 overflow-hidden mx-4 p-6 sm:p-8 border border-slate-100 space-y-6">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                <h3 id="authModalTitle" class="text-xl font-bold text-slate-900">เข้าสู่ระบบ UP Board</h3>
+                <button onclick="closeAuthModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 w-8 h-8 flex items-center justify-center rounded-xl font-bold transition">✕</button>
+            </div>
+
+            <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                <div id="registerFields" class="space-y-3 hidden">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-700 block mb-1">ชื่อ-นามสกุลจริง *</label>
+                        <input id="authName" type="text" placeholder="นายสมชาย ใจดี" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition">
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-700 block mb-1">สถานะผู้ใช้งาน *</label>
+                        <select id="authRole" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition">
+                            <option value="นิสิต">นิสิต</option>
+                            <option value="บุคลากร">บุคลากร</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-700 block mb-1">คณะ / หน่วยงาน</label>
+                        <input id="authFaculty" type="text" placeholder="เทคโนโลยีสารสนเทศและการสื่อสาร" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="text-xs font-semibold text-slate-700 block mb-1">อีเมลมหาวิทยาลัย (@up.ac.th) *</label>
+                    <input id="authEmail" type="email" required placeholder="student@up.ac.th" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition">
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-700 block mb-1">รหัสผ่าน *</label>
+                    <input id="authPassword" type="password" required placeholder="••••••••" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition">
+                </div>
+
+                <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-purple-700 hover:bg-purple-800 text-white font-medium rounded-xl text-sm transition shadow-sm cursor-pointer mt-3">
+                    เข้าสู่ระบบ
+                </button>
+            </form>
+
+            <div class="text-center text-xs text-slate-500 pt-3 border-t border-slate-100">
+                <span id="authToggleText">ยังไม่มีบัญชีผู้ใช้งาน?</span>
+                <button onclick="toggleAuthMode()" id="authToggleBtn" class="text-purple-700 font-semibold underline ml-1 cursor-pointer">
+                    สมัครสมาชิก
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 2: Create Post Modal -->
+    <div id="createPostModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-xs" onclick="closeModal()"></div>
+        <div class="bg-white w-full max-w-2xl rounded-3xl shadow-2xl z-10 overflow-hidden mx-4 my-6 flex flex-col max-h-[90vh] border border-slate-100">
+            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                <div class="flex items-center space-x-2 text-slate-800 font-bold">
+                    <span class="text-purple-600">📝</span> <span>สร้างโพสต์ใหม่</span>
+                </div>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center rounded-xl font-bold transition">✕</button>
+            </div>
+
+            <div class="p-6 space-y-6 overflow-y-auto">
+                <div class="space-y-3">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">📌 1. เลือกหมวดหมู่ข่าวสาร <span class="text-rose-500">*</span></label>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                        <label class="flex items-center space-x-2 border border-slate-200 p-3 rounded-xl cursor-pointer hover:bg-slate-50 text-sm font-medium">
+                            <input type="radio" name="category" value="กิจกรรม" class="accent-purple-700"> <span>📢 กิจกรรม</span>
+                        </label>
+                        <label class="flex items-center space-x-2 border border-slate-200 p-3 rounded-xl cursor-pointer hover:bg-slate-50 text-sm font-medium">
+                            <input type="radio" name="category" value="ของหาย" class="accent-purple-700"> <span>🔍 ของหาย</span>
+                        </label>
+                        <label class="flex items-center space-x-2 border border-slate-200 p-3 rounded-xl cursor-pointer hover:bg-slate-50 text-sm font-medium">
+                            <input type="radio" name="category" value="บอกต่อ" checked class="accent-purple-700"> <span>✨ บอกต่อ</span>
+                        </label>
+                        <label class="flex items-center space-x-2 border border-slate-200 p-3 rounded-xl cursor-pointer hover:bg-slate-50 text-sm font-medium">
+                            <input type="radio" name="category" value="เรื่องเร่งด่วน" class="accent-purple-700"> <span>🚨 เรื่องเร่งด่วน</span>
+                        </label>
+                        <label class="flex items-center space-x-2 border border-slate-200 p-3 rounded-xl cursor-pointer hover:bg-slate-50 text-sm font-medium">
+                            <input type="radio" name="category" value="แจ้งซ่อม" class="accent-purple-700"> <span>🔧 แจ้งซ่อม</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">✏️ 2. รายละเอียดข่าวสาร</label>
+                    <input id="postTitle" type="text" placeholder="ระบุหัวข้อข่าวสาร..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition">
+                    <textarea id="postContent" rows="4" placeholder="เขียนรายละเอียดเนื้อหาข่าวสารที่นี่..." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:border-purple-600 focus:ring-2 focus:ring-purple-100 transition resize-none"></textarea>
+                </div>
+
+                <div class="space-y-3 pt-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">⏳ 3. การปักหมวดและตั้งเวลาโพสต์</label>
+                    <div class="bg-purple-50/50 border border-purple-100 rounded-xl p-4 space-y-3">
+                        <label class="flex items-center space-x-2.5 cursor-pointer">
+                            <input id="isPinned" type="checkbox" onchange="togglePinOptions()" class="w-4 h-4 accent-purple-700 rounded">
+                            <span class="text-sm font-bold text-purple-900">📌 ปักหมุดโพสต์นี้ (Pin Post)</span>
+                        </label>
+
+                        <div id="pinDurationOption" class="hidden pl-7 space-y-1.5">
+                            <span class="text-xs font-semibold text-slate-600 block">เลือกระยะเวลาปักหมุด:</span>
+                            <div class="flex items-center space-x-4">
+                                <label class="flex items-center space-x-1.5 text-xs text-slate-700 cursor-pointer">
+                                    <input type="radio" name="pinDays" value="3" checked class="accent-purple-700">
+                                    <span>ปักหมุด 3 วัน</span>
+                                </label>
+                                <label class="flex items-center space-x-1.5 text-xs text-slate-700 cursor-pointer">
+                                    <input type="radio" name="pinDays" value="7" class="accent-purple-700">
+                                    <span>ปักหมุด 7 วัน</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <p id="normalPostTip" class="text-xs text-slate-500 pl-7">
+                            * โพสต์ปกติที่ไม่ปักหมุดจะแสดงบนกระดานข่าวเป็นเวลา <span class="font-bold text-purple-700">24 ชั่วโมง</span> และจะหมดอายุโดยอัตโนมัติ
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-2 pt-1">
+                    <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">🔒 4. การแสดงตัวตน</label>
+                    <div class="space-y-2 bg-slate-50/80 p-4 rounded-xl border border-slate-100">
+                        <label class="flex items-center space-x-3 text-sm text-slate-700 cursor-pointer">
+                            <input type="radio" name="identity" value="disclosed" checked class="accent-purple-700">
+                            <span>แสดงชื่อ-นามสกุลจริง (ตามบัญชีที่ล็อกอิน)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 text-sm text-slate-700 cursor-pointer">
+                            <input type="radio" name="identity" value="anonymous" class="accent-purple-700">
+                            <span>ไม่ระบุตัวตน (Anonymous)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-slate-50 flex justify-end space-x-3 border-t border-slate-100">
+                <button onclick="closeModal()" class="px-5 py-2.5 border border-slate-200 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 transition">ยกเลิก</button>
+                <button id="submitPostBtn" class="px-5 py-2.5 bg-purple-700 hover:bg-purple-800 text-white font-medium rounded-xl text-sm shadow-sm transition">🚀 เผยแพร่โพสต์</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App JavaScript Core -->
+    <script>
+        let currentUser = JSON.parse(localStorage.getItem('up_user')) || null;
+        let isAuthRegisterMode = false;
+        let currentFilter = "ทั้งหมด";
+
+        const now = Date.now();
+
+        let postsData = JSON.parse(localStorage.getItem('up_posts')) || [
+            {
+                id: 1,
+                category: "เรื่องเร่งด่วน",
+                emoji: "🚨",
+                title: "ปิดปรับปรุงถนนเส้นหน้า มอ. เย็นนี้เวลา 17.00 น.",
+                content: "เนื่องจากมีการซ่อมแซมพื้นผิวจราจร โปรดหลีกเลี่ยงเส้นทางและใช้ทางเบี่ยงชั่วคราว",
+                identity: "disclosed",
+                author: "ฝ่ายอาคารสถานที่ (บุคลากร)",
+                userEmail: "building@up.ac.th",
+                isPinned: true,
+                expiresAt: now + (3 * 24 * 60 * 60 * 1000)
+            },
+            {
+                id: 2,
+                category: "ของหาย",
+                emoji: "🔍",
+                title: "เจอหูฟังบลูทูธตกอยู่ใต้ตึกเรียนรวม",
+                content: "พบตอนเวลาประมาณ 13:00 น. ใครเป็นเจ้าของนำหลักฐานมารับคืนได้ที่ห้องสโมสรนิสิตนะครับ",
+                identity: "anonymous",
+                author: "ผู้ใช้งานไม่ระบุตัวตน",
+                userEmail: "anon@up.ac.th",
+                isPinned: false,
+                expiresAt: now + (18 * 60 * 60 * 1000)
+            },
+            {
+                id: 3,
+                category: "บอกต่อ",
+                emoji: "✨",
+                title: "ร้านข้าวมันไก่เปิดใหม่หลัง มอ. อร่อยและให้เยอะมาก!",
+                content: "คุ้มราคาสุดๆ น้ำซุปมะนาวดองคือทีเด็ด พิกัดข้างๆ ร้านสะดวกซื้อเลยครับ",
+                identity: "disclosed",
+                author: "สมชาย ใจดี (นิสิต)",
+                userEmail: "somchai@up.ac.th",
+                isPinned: false,
+                expiresAt: now + (24 * 60 * 60 * 1000)
+            }
+        ];
+
+        const categoryStyles = {
+            "เรื่องเร่งด่วน": "bg-rose-50 text-rose-700 border-rose-200/80",
+            "กิจกรรม": "bg-purple-50 text-purple-700 border-purple-200/80",
+            "ของหาย": "bg-sky-50 text-sky-700 border-sky-200/80",
+            "บอกต่อ": "bg-emerald-50 text-emerald-700 border-emerald-200/80",
+            "แจ้งซ่อม": "bg-amber-50 text-amber-700 border-amber-200/80"
+        };
+
+        window.onload = function() {
+            updateNavUserArea();
+            renderPosts();
+        };
+
+        function togglePinOptions() {
+            const isPinned = document.getElementById('isPinned').checked;
+            document.getElementById('pinDurationOption').classList.toggle('hidden', !isPinned);
+            document.getElementById('normalPostTip').classList.toggle('hidden', isPinned);
+        }
+
+        // คำนวณแสดงเวลาคงเหลือ
+        function getTimeRemainingText(expiresAt, isPinned) {
+            const diffMs = expiresAt - Date.now();
+            if (diffMs <= 0) return "หมดอายุแล้ว";
+
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffHours / 24);
+
+            if (isPinned) {
+                return `📌 ปักหมุด (เหลืออีก ${diffDays > 0 ? diffDays + ' วัน' : diffHours + ' ชม.'})`;
+            }
+            return `⏳ เหลืออีก ${diffHours > 0 ? diffHours + ' ชม.' : 'น้อยกว่า 1 ชม.'}`;
+        }
+
+        function switchView(viewName) {
+            const feedView = document.getElementById('feedView');
+            const profileView = document.getElementById('profileView');
+
+            if (viewName === 'profile') {
+                if (!currentUser) { openAuthModal(); return; }
+                feedView.classList.add('hidden');
+                profileView.classList.remove('hidden');
+                renderProfileData();
+            } else {
+                profileView.classList.add('hidden');
+                feedView.classList.remove('hidden');
+            }
+        }
+
+        function updateNavUserArea() {
+            const navArea = document.getElementById('navUserArea');
+            if (currentUser) {
+                navArea.innerHTML = `
+                    <button onclick="switchView('profile')" class="flex items-center space-x-2.5 bg-slate-100 hover:bg-slate-200/70 px-3.5 py-1.5 rounded-full text-xs font-semibold text-slate-700 transition cursor-pointer border border-slate-200/80">
+                        <div class="w-6 h-6 rounded-full bg-purple-700 text-white flex items-center justify-center font-bold text-[10px]">
+                            ${currentUser.name.charAt(0)}
+                        </div>
+                        <span>${currentUser.name}</span>
+                    </button>
+                `;
+            } else {
+                navArea.innerHTML = `
+                    <button onclick="openAuthModal()" class="bg-purple-700 hover:bg-purple-800 text-white font-medium text-xs py-2 px-4 rounded-xl transition shadow-2xs cursor-pointer">
+                        🔑 เข้าสู่ระบบ / สมัครสมาชิก
+                    </button>
+                `;
+            }
+        }
+
+        function openAuthModal() { document.getElementById('authModal').classList.remove('hidden'); }
+        function closeAuthModal() { document.getElementById('authModal').classList.add('hidden'); }
+
+        function toggleAuthMode() {
+            isAuthRegisterMode = !isAuthRegisterMode;
+            document.getElementById('authModalTitle').innerText = isAuthRegisterMode ? "สมัครสมาชิก UP Board" : "เข้าสู่ระบบ UP Board";
+            document.getElementById('authSubmitBtn').innerText = isAuthRegisterMode ? "ยืนยันการสมัครสมาชิก" : "เข้าสู่ระบบ";
+            document.getElementById('authToggleText').innerText = isAuthRegisterMode ? "มีบัญชีอยู่แล้ว?" : "ยังไม่มีบัญชีผู้ใช้งาน?";
+            document.getElementById('authToggleBtn').innerText = isAuthRegisterMode ? "เข้าสู่ระบบ" : "สมัครสมาชิก";
+            document.getElementById('registerFields').classList.toggle('hidden', !isAuthRegisterMode);
+        }
+
+        function handleAuthSubmit(event) {
+            event.preventDefault();
+            const email = document.getElementById('authEmail').value.trim();
+
+            if (isAuthRegisterMode) {
+                const name = document.getElementById('authName').value.trim();
+                const role = document.getElementById('authRole').value;
+                const faculty = document.getElementById('authFaculty').value.trim() || "ไม่ระบุคณะ";
+
+                if (!name) { alert("กรุณากรอกชื่อ-นามสกุลจริง"); return; }
+                currentUser = { name, email, role, faculty };
+            } else {
+                currentUser = {
+                    name: email.split('@')[0],
+                    email: email,
+                    role: "นิสิต",
+                    faculty: "มหาวิทยาลัยพะเยา"
+                };
+            }
+
+            localStorage.setItem('up_user', JSON.stringify(currentUser));
+            updateNavUserArea();
+            closeAuthModal();
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('up_user');
+            updateNavUserArea();
+            switchView('feed');
+        }
+
+        function renderProfileData() {
+            if (!currentUser) return;
+            document.getElementById('profileName').innerText = currentUser.name;
+            document.getElementById('profileRole').innerText = `สถานะ: ${currentUser.role}`;
+            document.getElementById('profileEmail').innerText = currentUser.email;
+            document.getElementById('profileFaculty').innerText = currentUser.faculty;
+            document.getElementById('profileAvatar').innerText = currentUser.name.charAt(0);
+
+            const myPostsContainer = document.getElementById('myPostsContainer');
+            const myPosts = postsData.filter(post => post.userEmail === currentUser.email);
+
+            myPostsContainer.innerHTML = "";
+            if (myPosts.length === 0) {
+                myPostsContainer.innerHTML = `<p class="text-xs text-slate-400 py-6 text-center border border-dashed border-slate-200 rounded-2xl">คุณยังไม่มีประวัติการโพสต์</p>`;
+                return;
+            }
+
+            myPosts.forEach(post => {
+                const item = document.createElement('div');
+                item.className = "flex items-center justify-between bg-slate-50/80 p-4 rounded-2xl border border-slate-100 hover:border-slate-200 transition";
+                item.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${categoryStyles[post.category]}">${post.category}</span>
+                            <span class="text-[10px] text-slate-400 font-medium">${getTimeRemainingText(post.expiresAt, post.isPinned)}</span>
+                        </div>
+                        <h4 class="text-sm font-bold text-slate-800">${post.title}</h4>
+                    </div>
+                    <button onclick="deletePost(${post.id})" class="text-xs text-rose-600 hover:text-rose-800 font-medium px-3 py-1.5 rounded-xl border border-rose-200 hover:bg-rose-50 transition cursor-pointer">
+                        🗑️ ลบโพสต์
+                    </button>
+                `;
+                myPostsContainer.appendChild(item);
+            });
+        }
+
+        function deletePost(postId) {
+            if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้?")) {
+                postsData = postsData.filter(p => p.id !== postId);
+                localStorage.setItem('up_posts', JSON.stringify(postsData));
+                renderPosts();
+                renderProfileData();
+            }
+        }
+
+        function handleCreatePostClick() {
+            if (!currentUser) {
+                alert("กรุณาเข้าสู่ระบบก่อนทำการสร้างโพสต์ใหม่");
+                openAuthModal();
+                return;
+            }
+            openModal();
+        }
+
+        function openModal() { document.getElementById('createPostModal').classList.remove('hidden'); }
+        function closeModal() { document.getElementById('createPostModal').classList.add('hidden'); }
+
+        // Render Feed Posts (ปรับตำแหน่งเวลาลงมุมขวาด้านล่าง)
+        function renderPosts() {
+            const postsContainer = document.getElementById('postsContainer');
+            const feedTitle = document.getElementById('feedTitle');
+            postsContainer.innerHTML = "";
+            
+            const currentTime = Date.now();
+            const activePosts = postsData.filter(post => post.expiresAt > currentTime);
+
+            const filteredPosts = currentFilter === "ทั้งหมด" 
+                ? activePosts 
+                : activePosts.filter(post => post.category === currentFilter);
+
+            filteredPosts.sort((a, b) => (b.isPinned ? 1 : 0) - (a.isPinned ? 1 : 0));
+
+            feedTitle.innerText = `Community Board (${currentFilter})`;
+
+            if (filteredPosts.length === 0) {
+                postsContainer.innerHTML = `
+                    <div class="text-center py-16 text-slate-400 border border-dashed border-slate-200 rounded-3xl bg-white">
+                        <span class="text-3xl block mb-2">📭</span> ยังไม่มีโพสต์ในหมวดหมู่นี้
+                    </div>
+                `;
+                return;
+            }
+
+            filteredPosts.forEach(post => {
+                const postElement = document.createElement('article');
+                const badgeStyle = categoryStyles[post.category] || "bg-slate-100 text-slate-700 border-slate-200";
+
+                const cardStyle = post.isPinned 
+                    ? "bg-amber-50/20 border-amber-300/80 shadow-xs" 
+                    : "bg-white border-slate-200/70 shadow-2xs";
+
+                const pinBadge = post.isPinned 
+                    ? `<span class="bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full flex items-center space-x-1">
+                        <span>📌</span> <span>ปักหมุด</span>
+                       </span>` 
+                    : "";
+
+                // Badge เวลาที่จะแสดงที่มุมขวาด้านล่าง
+                const timeBadge = `<span class="bg-slate-100/80 text-slate-500 border border-slate-200/80 text-[11px] font-medium px-2.5 py-1 rounded-lg flex items-center space-x-1 shadow-2xs">
+                    <span>${getTimeRemainingText(post.expiresAt, post.isPinned)}</span>
+                   </span>`;
+
+                postElement.className = `${cardStyle} p-6 rounded-3xl border hover:shadow-md hover:-translate-y-0.5 transition-all flex flex-col justify-between space-y-3`;
+                postElement.innerHTML = `
+                    <!-- Header ส่วนบนของการ์ด -->
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex items-center space-x-1.5">
+                                ${pinBadge}
+                                <span class="border text-xs font-semibold px-3 py-0.5 rounded-full flex items-center space-x-1 ${badgeStyle}">
+                                    <span>${post.emoji}</span> <span>${post.category}</span>
+                                </span>
+                            </div>
+                            <div class="flex items-center space-x-1.5 text-xs bg-slate-50 border border-slate-100 px-3 py-1 rounded-full text-slate-500">
+                                <span>👤</span>
+                                <span class="${post.identity === 'anonymous' ? 'italic' : 'font-medium text-slate-700'}">${post.author}</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 leading-snug">${post.title}</h3>
+                        <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-line">${post.content}</p>
+                    </div>
+
+                    <!-- Footer ส่วนล่างของการ์ด (วางเวลาไว้ที่มุมขวาด้านล่าง) -->
+                    <div class="pt-2 flex items-center justify-end border-t border-slate-100/60">
+                        ${timeBadge}
+                    </div>
+                `;
+                postsContainer.appendChild(postElement);
+            });
+        }
+
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                switchView('feed');
+                
+                document.querySelectorAll('.sidebar-item').forEach(i => {
+                    i.classList.remove('bg-purple-100/60', 'text-purple-800', 'font-semibold', 'shadow-2xs', 'border', 'border-purple-200/50');
+                    i.classList.add('text-slate-600', 'hover:bg-slate-200/50');
+                });
+                
+                item.classList.remove('text-slate-600', 'hover:bg-slate-200/50');
+                item.classList.add('bg-purple-100/60', 'text-purple-800', 'font-semibold', 'shadow-2xs', 'border', 'border-purple-200/50');
+
+                currentFilter = item.getAttribute('data-category');
+                renderPosts();
+            });
+        });
+
+        document.getElementById("submitPostBtn").addEventListener("click", (e) => {
+            e.preventDefault();
+            const titleValue = document.getElementById("postTitle").value.trim();
+            const contentValue = document.getElementById("postContent").value.trim();
+            const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
+            const selectedIdentity = document.querySelector('input[name="identity"]:checked')?.value;
+            const isPinned = document.getElementById("isPinned").checked;
+
+            if (!titleValue || !contentValue) {
+                alert("กรุณากรอกข้อมูลให้ครบถ้วน");
+                return;
+            }
+
+            if ((selectedCategory === "แจ้งซ่อม" || selectedCategory === "เรื่องเร่งด่วน") && selectedIdentity === "anonymous") {
+                alert("หมวด 'แจ้งซ่อม' และ 'เรื่องเร่งด่วน' ไม่อนุญาตให้ใช้แบบไม่ระบุตัวตน");
+                return;
+            }
+
+            let durationMs = 24 * 60 * 60 * 1000;
+            if (isPinned) {
+                const selectedPinDays = parseInt(document.querySelector('input[name="pinDays"]:checked')?.value || "3");
+                durationMs = selectedPinDays * 24 * 60 * 60 * 1000;
+            }
+
+            const expiresAt = Date.now() + durationMs;
+            const emojiMap = { "กิจกรรม": "📢", "ของหาย": "🔍", "บอกต่อ": "✨", "เรื่องเร่งด่วน": "🚨", "แจ้งซ่อม": "🔧" };
+
+            const authorName = selectedIdentity === "anonymous" 
+                ? "ผู้ใช้งานไม่ระบุตัวตน" 
+                : `${currentUser.name} (${currentUser.role})`;
+
+            const newPost = {
+                id: Date.now(),
+                category: selectedCategory,
+                emoji: emojiMap[selectedCategory] || "📝",
+                title: titleValue,
+                content: contentValue,
+                identity: selectedIdentity,
+                author: authorName,
+                userEmail: currentUser.email,
+                isPinned: isPinned,
+                expiresAt: expiresAt
+            };
+
+            postsData.push(newPost);
+            localStorage.setItem('up_posts', JSON.stringify(postsData));
+            renderPosts();
+
+            document.getElementById("postTitle").value = "";
+            document.getElementById("postContent").value = "";
+            document.getElementById("isPinned").checked = false;
+            togglePinOptions();
+            closeModal();
+        });
+    </script>
+</body>
+</html>

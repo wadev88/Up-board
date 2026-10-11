@@ -1,0 +1,14 @@
+{
+  "name": "up-board-testing",
+  "private": true,
+  "scripts": {
+    "test": "node --test src/tests/*.test.js",
+    "coverage": "node --experimental-test-coverage --test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
+    "fast-check": "^4.10.2"
+  }
+}

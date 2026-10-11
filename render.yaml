@@ -1,0 +1,67 @@
+# Render Blueprint for the UP Board backend (ADR-001: backend on Render).
+# Database: Supabase PostgreSQL (ADR-003) — DATABASE_URL is the Supabase *session pooler* or direct
+# connection string (port 5432, sslmode=require). Not the transaction pooler (6543): psycopg uses
+# prepared statements. The API connects as the table owner; RLS (migration 0002) blocks PostgREST.
+# Frontend is deployed on Vercel (root directory: frontend/, env NEXT_PUBLIC_API_URL,
+# NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY).
+# Secrets marked `sync: false` must be entered in the Render dashboard — never in Git.
+
+services:
+  - type: web
+    name: upboard-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: free
+    autoDeploy: false            # deployed by .github/workflows/cd.yml after CI passes
+    healthCheckPath: /api/v1/health
+    preDeployCommand: alembic upgrade head && python /app/database/seeders/seed.py
+    envVars: &backend-env
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false              # postgresql+psycopg://postgres.<ref>:<pw>@<region>.pooler.supabase.com:5432/postgres?sslmode=require
+      - key: DB_POOL_SIZE
+        value: "15"              # stay well below the Supabase plan's connection limit
+      - key: DB_MAX_OVERFLOW
+        value: "5"
+      - key: SUPABASE_URL
+        sync: false              # https://<ref>.supabase.co — Google sign-in token verification (JWKS)
+      - key: SUPABASE_JWT_SECRET
+        sync: false              # only for projects still on the legacy shared JWT secret
+      - key: PASSWORD_SIGNUP_ENABLED
+        value: "false"           # new users sign in with Google @up.ac.th
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        sync: false              # e.g. https://upboard.vercel.app
+      - key: FRONTEND_URL
+        sync: false
+      - key: PUBLIC_API_URL
+        sync: false              # e.g. https://upboard-api.onrender.com
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: COOKIE_SAMESITE
+        value: none              # frontend and API are on different sites
+      - key: STORAGE_BACKEND
+        value: s3                # local disk is wiped on redeploy (ADR-001 trade-off #6)
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_PUBLIC_BASE_URL
+        sync: false
+      - key: BOOTSTRAP_ADMIN_EMAIL
+        sync: false
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
+
+  - type: worker
+    name: upboard-worker
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    plan: starter                # background workers are not available on the free plan
+    autoDeploy: false
+    dockerCommand: python -m app.worker
+    envVars: *backend-env

@@ -1,0 +1,34 @@
+# Environments
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+ENV/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local uploads (development file storage)
+backend/uploads/
+uploads/
+
+# Node.js
+node_modules/
+.next/
+dist/
+frontend/test-results/
+frontend/playwright-report/
+*.tsbuildinfo
+
+# OS Header files
+.DS_Store
+Thumbs.db

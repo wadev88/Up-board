@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบจัดการกฎการตรวจสอบโพสต์</title>
+
+    <link rel="stylesheet" href="Natpakhan_auto_detect_bad_words.css">
+
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <!-- ================= Sidebar ================= -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+
+            <div class="brand-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+
+            <div>
+                <h1>UP Board</h1>
+                <p>Validation System</p>
+            </div>
+
+        </div>
+
+        <nav class="nav-menu">
+
+            <button class="nav-item active">
+                <i class="fa-solid fa-chart-column"></i>
+                Dashboard
+            </button>
+
+            <button class="nav-item">
+                <i class="fa-solid fa-text-width"></i>
+                จำกัดจำนวนคำ
+            </button>
+
+            <button class="nav-item">
+                <i class="fa-solid fa-ban"></i>
+                คำไม่เหมาะสม
+            </button>
+
+            <button class="nav-item">
+                <i class="fa-solid fa-shield"></i>
+                ตรวจจับสแปม
+            </button>
+
+            <button class="nav-item">
+                <i class="fa-solid fa-gears"></i>
+                Workflow
+            </button>
+
+            <button class="nav-item">
+                <i class="fa-solid fa-sliders"></i>
+                ตั้งค่าระบบ
+            </button>
+
+        </nav>
+
+        <div class="sidebar-note">
+
+            <strong>ระบบตรวจสอบโพสต์</strong>
+
+            <p>
+                ใช้สำหรับกำหนดกฎในการตรวจสอบโพสต์ก่อนเผยแพร่
+                เพื่อป้องกันคำไม่เหมาะสม สแปม และข้อความที่ผิดกฎ
+            </p>
+
+        </div>
+
+    </aside>
+
+    <!-- ================= Main ================= -->
+
+    <main class="main-content">
+
+        <header class="top-header">
+
+            <div>
+
+                <p class="eyebrow">
+                    Dashboard
+                </p>
+
+                <h2>
+                    ระบบจัดการกฎการตรวจสอบโพสต์
+                </h2>
+
+                <p>
+                    ตั้งค่ากฎสำหรับตรวจสอบเนื้อหาและป้องกันข้อความที่ไม่เหมาะสม
+                </p>
+
+            </div>
+
+            <button class="primary-btn" id="btnSave">
+
+                <i class="fa-solid fa-floppy-disk"></i>
+
+                บันทึกการตั้งค่า
+
+            </button>
+
+        </header>
+
+        <!-- ================= Statistics ================= -->
+
+        <section class="stats-grid">
+
+            <article class="stat-card">
+
+                <span>กฎทั้งหมด</span>
+
+                <strong>4</strong>
+
+            </article>
+
+            <article class="stat-card">
+
+                <span>เปิดใช้งาน</span>
+
+                <strong>3</strong>
+
+            </article>
+
+            <article class="stat-card">
+
+                <span>ปิดใช้งาน</span>
+
+                <strong>1</strong>
+
+            </article>
+
+            <article class="stat-card">
+
+                <span>อัปเดตล่าสุด</span>
+
+                <strong id="lastUpdate">
+                    วันนี้
+                </strong>
+
+            </article>
+
+        </section>
+
+        <!-- ================= Word Count ================= -->
+
+        <section class="card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <h3>จำกัดจำนวนคำ</h3>
+
+                    <p>กำหนดจำนวนคำและจำนวนตัวอักษรสูงสุดของโพสต์</p>
+
+                </div>
+
+                <label class="switch">
+
+                    <input
+                        type="checkbox"
+                        id="enableMaxLimit"
+                        checked>
+
+                    <span class="slider"></span>
+
+                </label>
+
+            </div>
+
+            <div class="card-body">
+
+                <div class="form-grid">
+
+                    <div class="input-group">
+
+                        <label>
+
+                            จำนวนคำสูงสุด
+
+                        </label>
+
+                        <input
+                            id="maxWords"
+                            type="number"
+                            value="100">
+
+                    </div>
+
+                    <div class="input-group">
+
+                        <label>
+
+                            จำนวนตัวอักษรสูงสุด
+
+                        </label>
+
+                        <input
+                            id="maxChars"
+                            type="number"
+                            value="500">
+
+                    </div>
+
+                </div>
+
+                <div class="radio-group">
+
+                    <label>
+
+                        <input
+                            type="radio"
+                            name="actionOnFailure"
+                            value="block"
+                            checked>
+
+                        บล็อกการโพสต์
+
+                    </label>
+
+                    <label>
+
+                        <input
+                            type="radio"
+                            name="actionOnFailure"
+                            value="warning">
+
+                        แจ้งเตือนผู้ใช้
+
+                    </label>
+
+                    <label>
+
+                        <input
+                            type="radio"
+                            name="actionOnFailure"
+                            value="restrict">
+
+                        จำกัดการมองเห็น
+
+                    </label>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= Offensive ================= -->
+
+        <section class="card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <h3>ตรวจจับคำไม่เหมาะสม</h3>
+
+                    <p>ระบบตรวจสอบคำหยาบ คำด่า และ Cyberbullying</p>
+
+                </div>
+
+                <label class="switch">
+
+                    <input
+                        id="toggleOffensiveRule"
+                        type="checkbox"
+                        checked>
+
+                    <span class="slider"></span>
+
+                </label>
+
+            </div>
+
+            <div
+                class="card-body"
+                id="offensiveSection">
+
+                <div class="input-group">
+
+                    <label>
+
+                        Blacklist
+
+                    </label>
+
+                    <input
+                        id="blocklistInput"
+                        type="text"
+                        placeholder="เช่น คำหยาบ1, คำหยาบ2">
+
+                </div>
+
+                <div class="input-group">
+
+                    <label>
+
+                        ระดับความรุนแรง
+
+                    </label>
+
+                    <input
+                        id="severitySlider"
+                        type="range"
+                        min="1"
+                        max="10"
+                        value="5">
+
+                </div>
+
+                <label class="checkbox-row">
+
+                    <input
+                        id="aiDetection"
+                        type="checkbox">
+
+                    ใช้ AI วิเคราะห์บริบทของข้อความ
+
+                </label>
+
+            </div>
+
+        </section>
+
+        <!-- ================= Spam ================= -->
+
+        <section class="card">
+
+            <div class="card-header">
+
+                <div>
+
+                    <h3>ตรวจจับสแปม</h3>
+
+                    <p>ป้องกันข้อความซ้ำ ลิงก์ และพฤติกรรมสแปม</p>
+
+                </div>
+
+                <label class="switch">
+
+                    <input
+                        id="toggleSpamRule"
+                        type="checkbox"
+                        checked>
+
+                    <span class="slider"></span>
+
+                </label>
+
+            </div>
+
+            <div
+                class="card-body"
+                id="spamSection">
+
+                <label class="checkbox-row">
+
+                    <input
+                        id="repeatDetection"
+                        type="checkbox"
+                        checked>
+
+                    ตรวจจับข้อความซ้ำ
+
+                </label>
+
+                <label class="checkbox-row">
+
+                    <input
+                        id="linkCheck"
+                        type="checkbox"
+                        checked>
+
+                    ตรวจสอบลิงก์อันตราย
+
+                </label>
+
+                <label class="checkbox-row">
+
+                    <input
+                        id="frequencyCheck"
+                        type="checkbox">
+
+                    ตรวจสอบความถี่ในการโพสต์
+
+                </label>
+
+                <div class="input-group">
+
+                    <label>
+
+                        Regex Pattern
+
+                    </label>
+
+                    <input
+                        id="regexInput"
+                        type="text"
+                        placeholder="กรอก Regex สำหรับตรวจจับ Spam">
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ================= Workflow ================= -->
+
+        <section class="card">
+
+            <div class="card-header">
+
+                <h3>Workflow การตรวจสอบ</h3>
+
+            </div>
+
+            <div class="workflow">
+
+                <div class="flow-step">
+
+                    ผู้ใช้ส่งโพสต์
+
+                </div>
+
+                <div class="flow-step">
+
+                    ตรวจสอบจำนวนคำ
+
+                </div>
+
+                <div class="flow-step">
+
+                    ตรวจจับคำไม่เหมาะสม
+
+                </div>
+
+                <div class="flow-step">
+
+                    ตรวจจับ Spam
+
+                </div>
+
+                <div class="flow-step">
+
+                    ส่งให้ผู้ดูแลตรวจสอบ
+
+                </div>
+
+                <div class="flow-step">
+
+                    อนุมัติการเผยแพร่
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <div class="action-bar">
+
+            <button
+                class="secondary-btn"
+                id="btnDiscard">
+
+                รีเซ็ตข้อมูล
+
+            </button>
+
+            <button
+                class="primary-btn"
+                id="btnSaveBottom">
+
+                บันทึกการตั้งค่า
+
+            </button>
+
+        </div>
+
+    </main>
+
+</div>
+
+<div
+    class="toast hidden"
+    id="toast">
+</div>
+
+<script src="Natpakhan_auto_detect_bad_words.js"></script>
+
+</body>
+
+</html>

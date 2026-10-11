@@ -1,0 +1,32 @@
+# CD (ADR-001 deployment model): Frontend → Vercel (Git integration), Backend + Worker → Render.
+# Runs only after CI succeeded for a push to main. Render runs `alembic upgrade head` as the
+# pre-deploy command (see render.yaml), so migrations ship together with the code.
+name: CD Pipeline
+
+on:
+  workflow_run:
+    workflows: ["CI"]          # ต้องตรงกับ name: ใน .github/workflows/ci.yml
+    types: [completed]
+    branches: [main]           # deploy เฉพาะโค้ดที่อยู่บน main แล้ว
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-backend:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Trigger Render deploy (API + worker) for the commit CI tested
+        env:
+          API_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK_URL }}
+          WORKER_HOOK: ${{ secrets.RENDER_WORKER_DEPLOY_HOOK_URL }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ -z "$API_HOOK" ] || [ -z "$WORKER_HOOK" ]; then
+            echo "::warning::Render deploy hook secrets are not configured; skipping deploy."
+            exit 0
+          fi
+          curl --fail --silent --show-error -X POST "${API_HOOK}&ref=${SHA}"
+          curl --fail --silent --show-error -X POST "${WORKER_HOOK}&ref=${SHA}"

@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UP Community - Main Feed & Modal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;700&display=swap');
+        .font-th { font-family: 'Sarabun', sans-serif; }
+    </style>
+</head>
+<body class="bg-white font-th antialiased min-h-screen relative text-gray-900">
+ 
+    <header class="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 fixed top-0 left-0 right-0 z-10">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-10 bg-[#702983] rounded-b-full rounded-t-md flex items-center justify-center text-white text-[10px] font-bold shadow-xs">
+                มพ
+            </div>
+            <span class="text-xl font-bold text-gray-800">[UP Board]</span>
+        </div>
+        <div class="flex items-center space-x-5 text-gray-600 text-xl">
+            <button class="hover:text-gray-900 cursor-pointer">📁</button>
+            <button class="hover:text-gray-900 cursor-pointer">🔔</button>
+            <button class="hover:text-gray-900 cursor-pointer">👤</button>
+        </div>
+    </header>
+ 
+    <div class="flex pt-16 min-h-screen">
+       
+        <aside id="sidebarLinks" class="w-64 bg-white border-r border-gray-200 fixed top-16 bottom-0 p-4 space-y-1 z-20">
+            <a href="#" data-category="ทั้งหมด" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 bg-gray-200 text-gray-950 font-bold rounded-lg text-base transition">
+                <span>🏠</span> <span>ทั้งหมด</span>
+            </a>
+            <a href="#" data-category="กิจกรรม" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg text-base transition">
+                <span>📢</span> <span>กิจกรรม</span>
+            </a>
+            <a href="#" data-category="ของหาย" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg text-base transition">
+                <span>🔍</span> <span>ของหาย</span>
+            </a>
+            <a href="#" data-category="บอกต่อ" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg text-base transition">
+                <span>✨</span> <span>บอกต่อ</span>
+            </a>
+            <a href="#" data-category="เรื่องเร่งด่วน" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg text-base transition">
+                <span>🚨</span> <span>เรื่องเร่งด่วน</span>
+            </a>
+            <a href="#" data-category="แจ้งซ่อม" class="sidebar-item flex items-center space-x-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50 rounded-lg text-base transition">
+                <span>🔧</span> <span>แจ้งซ่อม</span>
+            </a>
+        </aside>
+ 
+        <main class="flex-1 ml-64 p-6 bg-white space-y-4">
+           
+            <div class="flex items-center justify-between max-w-3xl pb-2">
+                <h1 id="feedTitle" class="text-xl font-bold text-gray-800">Community Board (ทั้งหมด)</h1>
+                <button onclick="openModal()" class="border border-gray-800 bg-gray-100 hover:bg-gray-200 text-gray-900 font-bold py-1.5 px-4 rounded-xl flex items-center space-x-1 transition shadow-xs cursor-pointer">
+                    <span>+</span> <span>สร้างโพสต์ใหม่</span>
+                </button>
+            </div>
+ 
+            <div id="postsContainer" class="space-y-4">
+                <!-- โพสต์จะถูกแทรกที่นี่ผ่าน JS -->
+            </div>
+ 
+        </main>
+    </div>
+ 
+    <!-- Modal สร้างโพสต์ใหม่ -->
+    <div id="createPostModal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-xs" onclick="closeModal()"></div>
+        <div class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl z-10 overflow-hidden mx-4 my-6 flex flex-col max-h-[95vh]">
+           
+            <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <div class="border border-blue-600 bg-blue-50/30 px-3 py-1 rounded flex items-center space-x-1.5 text-blue-700 font-bold">
+                    <span>📝</span> <span>สร้างโพสต์ใหม่</span>
+                </div>
+                <button onclick="closeModal()" class="border border-blue-600 text-blue-600 hover:bg-blue-50 w-7 h-7 flex items-center justify-center rounded font-bold transition cursor-pointer">
+                    ✕
+                </button>
+            </div>
+ 
+            <div class="p-6 space-y-5 overflow-y-auto">
+                <div class="space-y-2">
+                    <label class="text-sm font-bold text-gray-800 flex items-center space-x-1">
+                        <span>📌</span> <span>1. เลือกหมวดหมู่ข่าวสารของคุณ (บังคับเลือก 1 หมวดหมู่)</span>
+                    </label>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label class="flex items-center space-x-3 border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                            <input type="radio" name="category" value="กิจกรรม" class="w-4 h-4 text-[#7000FF] focus:ring-[#7000FF]">
+                            <span class="text-sm text-gray-700">📢 กิจกรรม</span>
+                        </label>
+                        <label class="flex items-center space-x-3 border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                            <input type="radio" name="category" value="ของหาย" class="w-4 h-4 text-[#7000FF] focus:ring-[#7000FF]">
+                            <span class="text-sm text-gray-700">🔍 ของหาย</span>
+                        </label>
+                        <label class="flex items-center space-x-3 border border-purple-200 p-3 rounded-lg cursor-pointer bg-purple-50/20 transition">
+                            <input type="radio" name="category" value="บอกต่อ" checked class="w-4 h-4 text-[#7000FF] focus:ring-[#7000FF]">
+                            <span class="text-sm text-gray-800 font-medium">✨ บอกต่อ</span>
+                        </label>
+                        <label class="flex items-center space-x-3 border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                            <input type="radio" name="category" value="เรื่องเร่งด่วน" class="w-4 h-4 text-[#7000FF] focus:ring-[#7000FF]">
+                            <span class="text-sm text-gray-700">🚨 เรื่องเร่งด่วน</span>
+                        </label>
+                    </div>
+                    <div class="pt-1">
+                        <label class="flex items-center space-x-3 border border-gray-200 p-3 rounded-lg cursor-pointer hover:bg-gray-50 transition w-full sm:w-[calc(50%-0.375rem)]">
+                            <input type="radio" name="category" value="แจ้งซ่อม" class="w-4 h-4 text-[#7000FF] focus:ring-[#7000FF]">
+                            <span class="text-sm text-gray-700">🔧 แจ้งซ่อม</span>
+                        </label>
+                    </div>
+                </div>
+ 
+                <div class="space-y-3">
+                    <label class="text-sm font-bold text-gray-800 flex items-center space-x-1">
+                        <span>📝</span> <span>2. รายละเอียดข่าวสาร</span>
+                    </label>
+                    <input id="postTitle" type="text" placeholder="หัวข้อข่าวสาร" class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400">
+                    <textarea id="postContent" rows="4" placeholder="เนื้อหาข่าวสาร..." class="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 resize-none"></textarea>
+                   
+                    <div class="border-2 border-dashed border-gray-300 rounded-lg py-3 text-center text-sm text-gray-500 hover:bg-gray-50 cursor-pointer transition flex items-center justify-center space-x-2">
+                        <span>📁</span> <span>แนบรูปภาพ หรือ ไฟล์เอกสาร</span>
+                    </div>
+                </div>
+ 
+                <div class="space-y-2 pt-1">
+                    <label class="text-sm font-bold text-gray-800 flex items-center space-x-1">
+                        <span>🔒</span> <span>3. การแสดงตัวตน</span>
+                    </label>
+                    <div class="space-y-2.5 pl-1">
+                        <label class="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer">
+                            <input type="radio" name="identity" value="disclosed" checked class="w-4 h-4 text-[#7000FF] focus:ring-[#7000FF]">
+                            <span>แสดงชื่อ-นามสกุลจริง (ระบุสถานะ นิสิต / บุคลากร)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer">
+                            <input type="radio" name="identity" value="anonymous" class="w-4 h-4 text-[#7000FF] focus:ring-[#7000FF]">
+                            <span>ไม่ระบุตัวตน (Anonymous)</span>
+                        </label>
+                    </div>
+                    <p class="text-xs text-red-500 font-medium pt-1 leading-relaxed">
+                        *หมายเหตุ: หากเลือกหมวด "แจ้งซ่อม" หรือ "เรื่องเร่งด่วน" ระบบจะบังคับให้เปิดเผยชื่อจริงเพื่อความโปร่งใสและติดตามงานได้
+                    </p>
+                </div>
+ 
+                <!-- ส่วนเพิ่มฟีเจอร์ ปักหมุดโพสต์ -->
+                <div class="space-y-2 pt-4 border-t border-gray-100 mt-4">
+                    <label class="text-sm font-bold text-gray-800 flex items-center space-x-1">
+                        <span>📍</span> <span>4. ตัวเลือกพิเศษ (การปักหมุด)</span>
+                    </label>
+                    <div class="pl-1">
+                        <label class="flex items-center space-x-3 text-sm text-gray-700 cursor-pointer">
+                            <input type="checkbox" id="isPinned" class="w-4 h-4 text-red-500 rounded focus:ring-red-500">
+                            <span class="font-bold text-red-600">ต้องการปักหมุดโพสต์นี้ให้อยู่บนสุด</span>
+                        </label>
+                        <p class="text-xs text-gray-500 mt-1 ml-7">โพสต์ปกติจะมีอายุ 24 ชั่วโมง แต่หากปักหมุดสามารถเลือกเวลาได้</p>
+                    </div>
+                    <!-- ส่วนเลือกเวลา (จะแสดงก็ต่อเมื่อติ๊กปักหมุด) -->
+                    <div id="pinDurationContainer" class="hidden pl-8 space-x-5 mt-2">
+                        <label class="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer">
+                            <input type="radio" name="pinDuration" value="3" checked class="w-4 h-4 text-red-500 focus:ring-red-500">
+                            <span>ปักหมุด 3 วัน</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-sm text-gray-600 cursor-pointer">
+                            <input type="radio" name="pinDuration" value="7" class="w-4 h-4 text-red-500 focus:ring-red-500">
+                            <span>ปักหมุด 7 วัน</span>
+                        </label>
+                    </div>
+                </div>
+ 
+            </div>
+ 
+            <div class="px-6 py-4 bg-white flex justify-end space-x-3 border-t border-gray-50">
+                <button onclick="closeModal()" class="px-5 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition cursor-pointer">
+                    ยกเลิก
+                </button>
+                <button id="submitPostBtn" class="px-5 py-2 bg-[#7000FF] hover:bg-[#5b00d6] text-white font-medium rounded-xl text-sm shadow-sm transition flex items-center space-x-1.5 cursor-pointer">
+                    <span>🚀</span> <span>โพสต์</span>
+                </button>
+            </div>
+        </div>
+    </div>
+ 
+    <script>
+        const modal = document.getElementById('createPostModal');
+        const postsContainer = document.getElementById('postsContainer');
+        const feedTitle = document.getElementById('feedTitle');
+        const isPinnedCheckbox = document.getElementById('isPinned');
+        const pinDurationContainer = document.getElementById('pinDurationContainer');
+       
+        let currentFilter = "ทั้งหมด";
+ 
+        // คลังข้อมูลโพสต์จำลองเริ่มต้น พร้อม createdAt และ expiresAt
+        let postsData = [
+            {
+                id: 1,
+                category: "เรื่องเร่งด่วน",
+                emoji: "🚨",
+                title: "ปิดปรับปรุงถนนเส้นหน้า มอ. เย็นนี้เวลา 17.00",
+                content: "เนื่องจากมีการซ่อมแซมพื้นผิวจราจร โปรดหลีกเลี่ยงเส้นทางและใช้ทางเบี่ยงชั่วคราว",
+                identity: "disclosed",
+                author: "ฝ่ายอาคารสถานที่ (บุคลากร)",
+                isPinned: true,
+                createdAt: Date.now() - (2 * 60 * 60 * 1000), // โพสต์เมื่อ 2 ชม. ที่แล้ว
+                expiresAt: Date.now() + (3 * 24 * 60 * 60 * 1000) - (2 * 60 * 60 * 1000) // หมดอายุอีก 3 วันนับจากตอนโพสต์
+            },
+            {
+                id: 2,
+                category: "ของหาย",
+                emoji: "🔍",
+                title: "เจอหูฟังบลูทูธตกอยู่ใต้ตึกเรียนรวม",
+                content: "พบตอนเวลาประมาณ 13:00 น. ใครเป็นเจ้าของนำหลักฐานมารับคืนได้ที่ห้องสโมสรนิสิตนะครับ",
+                identity: "anonymous",
+                author: "ผู้ใช้งานไม่ระบุตัวตน",
+                isPinned: false,
+                createdAt: Date.now() - (10 * 60 * 60 * 1000), // โพสต์เมื่อ 10 ชม. ที่แล้ว
+                expiresAt: Date.now() + (24 * 60 * 60 * 1000) - (10 * 60 * 60 * 1000) // โพสต์ปกติ หมดอายุใน 24 ชม.
+            },
+            {
+                id: 3,
+                category: "บอกต่อ",
+                emoji: "✨",
+                title: "ร้านข้าวมันไก่เปิดใหม่หลัง มอ. อร่อยและให้เยอะมาก!",
+                content: "คุ้มราคาสุดๆ น้ำซุปมะนาวดองคือทีเด็ด พิกัดข้างๆ ร้านสะดวกซื้อเลยครับ",
+                identity: "disclosed",
+                author: "สมชาย ใจดี (นิสิต)",
+                isPinned: false,
+                createdAt: Date.now() - (23 * 60 * 60 * 1000), // โพสต์เมื่อ 23 ชม. ที่แล้ว (ใกล้หมดอายุ)
+                expiresAt: Date.now() + (24 * 60 * 60 * 1000) - (23 * 60 * 60 * 1000)
+            }
+        ];
+ 
+        function openModal() { modal.classList.remove('hidden'); }
+        function closeModal() { modal.classList.add('hidden'); }
+ 
+        window.onload = function() {
+            openModal();
+            renderPosts();
+           
+            // ทำให้เวลานับถอยหลังอัปเดตทุกๆ 1 นาที (60,000 ms)
+            setInterval(renderPosts, 60000);
+        };
+ 
+        isPinnedCheckbox.addEventListener('change', function() {
+            if(this.checked) {
+                pinDurationContainer.classList.remove('hidden');
+                pinDurationContainer.classList.add('flex');
+            } else {
+                pinDurationContainer.classList.add('hidden');
+                pinDurationContainer.classList.remove('flex');
+            }
+        });
+ 
+        // ฟังก์ชันแปลงเวลา
+        function formatDateTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('th-TH', {
+                year: '2-digit', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            }) + ' น.';
+        }
+ 
+        // ฟังก์ชันคำนวณเวลาที่เหลือ
+        function getTimeLeft(expiresAt) {
+            const diff = expiresAt - Date.now();
+            if (diff <= 0) return "หมดอายุแล้ว";
+           
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+           
+            let timeString = [];
+            if (days > 0) timeString.push(`${days} วัน`);
+            if (hours > 0) timeString.push(`${hours} ชม.`);
+            if (days === 0 && minutes > 0) timeString.push(`${minutes} นาที`);
+           
+            return timeString.join(' ') || "น้อยกว่า 1 นาที";
+        }
+ 
+        // --- ฟังก์ชันการแสดงผลโพสต์ (Render Feed) ---
+        function renderPosts() {
+            postsContainer.innerHTML = "";
+            const now = Date.now();
+           
+            // 1. กรองโพสต์ที่หมดเวลาทิ้งไปเลย (ทั้งแบบ 24ชม และ แบบปักหมุด)
+            postsData = postsData.filter(post => now < post.expiresAt);
+ 
+            // 2. กรองข้อมูลตามหมวดหมู่ที่เลือก
+            let filteredPosts = currentFilter === "ทั้งหมด"
+                ? [...postsData]
+                : postsData.filter(post => post.category === currentFilter);
+ 
+            // 3. เรียงลำดับข้อมูล (Sorting): ปักหมุดขึ้นก่อน ตามด้วยเวลาที่โพสต์ล่าสุด
+            filteredPosts.sort((a, b) => {
+                if (a.isPinned && !b.isPinned) return -1;
+                if (!a.isPinned && b.isPinned) return 1;
+                return b.createdAt - a.createdAt;
+            });
+ 
+            feedTitle.innerText = `Community Board (${currentFilter})`;
+ 
+            if (filteredPosts.length === 0) {
+                postsContainer.innerHTML = `
+                    <div class="text-center py-12 text-gray-400 border border-dashed border-gray-200 rounded-xl">
+                        ยังไม่มีโพสต์ในหมวดหมู่นี้
+                    </div>
+                `;
+                return;
+            }
+ 
+            filteredPosts.forEach(post => {
+                const postElement = document.createElement('div');
+                const cardBorder = post.isPinned ? "border-red-400 shadow-sm" : "border-gray-300 shadow-xs";
+                postElement.className = `bg-white p-5 rounded-xl border ${cardBorder} max-w-3xl space-y-3 transition hover:shadow-md relative`;
+               
+                const pinBadge = post.isPinned
+                    ? `<span class="bg-red-100 text-red-600 border border-red-200 text-[10px] font-bold px-2 py-0.5 rounded flex items-center space-x-1"><span>📌</span> <span>ปักหมุดแล้ว</span></span>`
+                    : "";
+ 
+                postElement.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <span class="border border-gray-500 text-gray-700 text-xs font-bold px-2 py-0.5 rounded-md flex items-center space-x-1">
+                                <span>${post.emoji}</span> <span>${post.category}</span>
+                            </span>
+                            ${pinBadge}
+                        </div>
+                        <span class="text-xs ${post.identity === 'anonymous' ? 'text-gray-400 italic' : 'text-purple-700 font-medium'}">
+                            👤 ${post.author}
+                        </span>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-gray-900 leading-tight mb-1">${post.title}</h3>
+                        <p class="text-sm text-gray-600 whitespace-pre-line">${post.content}</p>
+                    </div>
+                   
+                    <!-- ส่วนแสดงเวลา -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between text-xs text-gray-500 mt-2 pt-3 border-t border-gray-100">
+                        <div class="flex items-center space-x-1 mb-1 sm:mb-0">
+                            <span>🕒</span> <span>โพสต์เมื่อ: ${formatDateTime(post.createdAt)}</span>
+                        </div>
+                        <div class="flex items-center space-x-1 font-medium ${post.isPinned ? 'text-red-500' : 'text-orange-500'}">
+                            <span>⏳</span> <span>หมดอายุใน: ${getTimeLeft(post.expiresAt)}</span>
+                        </div>
+                    </div>
+                `;
+               
+                postsContainer.appendChild(postElement);
+            });
+        }
+ 
+        // --- ระบบคลิกเปลี่ยนหมวดหมู่ที่ Sidebar ---
+        const sidebarItems = document.querySelectorAll('.sidebar-item');
+        sidebarItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+               
+                sidebarItems.forEach(i => {
+                    i.classList.remove('bg-gray-200', 'text-gray-950', 'font-bold');
+                    i.classList.add('text-gray-700', 'hover:bg-gray-50');
+                });
+                item.classList.remove('text-gray-700', 'hover:bg-gray-50');
+                item.classList.add('bg-gray-200', 'text-gray-950', 'font-bold');
+ 
+                currentFilter = item.getAttribute('data-category');
+                renderPosts();
+            });
+        });
+ 
+        // --- การบันทึกโพสต์จริง ---
+        document.addEventListener("DOMContentLoaded", () => {
+            const submitPostBtn = document.getElementById("submitPostBtn");
+ 
+            if (submitPostBtn) {
+                submitPostBtn.addEventListener("click", (event) => {
+                    event.preventDefault();
+ 
+                    const titleInput = document.getElementById("postTitle");
+                    const contentInput = document.getElementById("postContent");
+                   
+                    const titleValue = titleInput ? titleInput.value.trim() : "";
+                    const contentValue = contentInput ? contentInput.value.trim() : "";
+ 
+                    const selectedCategory = document.querySelector('input[name="category"]:checked')?.value;
+                    const selectedIdentity = document.querySelector('input[name="identity"]:checked')?.value;
+                   
+                    const isPinned = isPinnedCheckbox.checked;
+                    const pinDuration = document.querySelector('input[name="pinDuration"]:checked')?.value;
+ 
+                    const emojiMap = {
+                        "กิจกรรม": "📢", "ของหาย": "🔍", "บอกต่อ": "✨",
+                        "เรื่องเร่งด่วน": "🚨", "แจ้งซ่อม": "🔧"
+                    };
+ 
+                    // Validation
+                    if (!titleValue || !contentValue) {
+                        alert("กรุณากรอกข้อมูลให้ครบถ้วน ทั้งหัวข้อและรายละเอียดเนื้อหาข่าวสาร");
+                        return;
+                    }
+                    if ((selectedCategory === "แจ้งซ่อม" || selectedCategory === "เรื่องเร่งด่วน") && selectedIdentity === "anonymous") {
+                        alert("ข้อผิดพลาด: หมวด 'แจ้งซ่อม' หรือ 'เรื่องเร่งด่วน' ไม่อนุญาตให้เลือก 'ไม่ระบุตัวตน'");
+                        return;
+                    }
+ 
+                    let authorName = selectedIdentity === "disclosed" ? "นิสิต / บุคลากร มพ. (เปิดเผยชื่อ)" : "ผู้ใช้งานไม่ระบุตัวตน";
+ 
+                    // คำนวณเวลาหมดอายุ
+                    const now = Date.now();
+                    let expireTimestamp = null;
+                    if (isPinned) {
+                        const days = parseInt(pinDuration, 10);
+                        expireTimestamp = now + (days * 24 * 60 * 60 * 1000);
+                    } else {
+                        // โพสต์ปกติ มีอายุ 24 ชม.
+                        expireTimestamp = now + (24 * 60 * 60 * 1000);
+                    }
+ 
+                    const newPost = {
+                        id: now,
+                        category: selectedCategory,
+                        emoji: emojiMap[selectedCategory] || "📝",
+                        title: titleValue,
+                        content: contentValue,
+                        identity: selectedIdentity,
+                        author: authorName,
+                        isPinned: isPinned,
+                        createdAt: now,
+                        expiresAt: expireTimestamp
+                    };
+ 
+                    postsData.push(newPost);
+                    renderPosts();
+ 
+                    // รีเซ็ตฟอร์ม
+                    titleInput.value = "";
+                    contentInput.value = "";
+                    isPinnedCheckbox.checked = false;
+                    pinDurationContainer.classList.add('hidden');
+                    pinDurationContainer.classList.remove('flex');
+                    document.querySelector('input[name="pinDuration"][value="3"]').checked = true;
+                   
+                    closeModal();
+                });
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Auto Remove Feed Posts Prototype</title>
+    <link rel="stylesheet" href="Aphisit_auto_remove_24h_post_prototype.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <img
+            src="../../docs/requirements/personas/images/LOGOS.png"
+            alt="Community Board Logo"
+            class="brand-logo"
+          />
+          <div>
+            <h1>UP Board</h1>
+            <p>Prototype</p>
+          </div>
+        </div>
+
+        <nav class="nav-menu" aria-label="Main navigation">
+          <button class="nav-item active" data-page="feedPage">หน้าฟีด</button>
+          <button class="nav-item" data-page="adminPage">จัดการโพสต์</button>
+          <button class="nav-item" data-page="flowPage">ลำดับการทำงาน</button>
+        </nav>
+
+        <div class="sidebar-note">
+          <strong>Feature</strong>
+          <p>ระบบซ่อนโพสต์ออกจากหน้าฟีดอัตโนมัติเมื่อครบ 24 ชั่วโมง</p>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="top-header">
+          <div>
+            <p class="eyebrow">ระบบผู้ดูแล</p>
+            <h2>ระบบซ่อนโพสต์อัตโนมัติเมื่อครบ 24 ชั่วโมง</h2>
+            <p>ช่วยให้หน้าฟีดแสดงเฉพาะโพสต์ที่ยังเป็นปัจจุบัน</p>
+          </div>
+
+          <button class="primary-btn" id="createDemoPostBtn">
+            + สร้างโพสต์ตัวอย่าง
+          </button>
+        </header>
+
+        <section class="page active" id="feedPage">
+          <div class="section-header">
+            <div>
+              <h3>หน้าฟีด</h3>
+              <p>แสดงเฉพาะโพสต์ที่ยังไม่ครบ 24 ชั่วโมง</p>
+            </div>
+
+            <div class="toolbar">
+              <input
+                id="feedSearchInput"
+                type="search"
+                placeholder="Search posts..."
+              />
+              <button class="secondary-btn" id="refreshFeedBtn">รีเฟรช</button>
+            </div>
+          </div>
+
+          <div id="feedList" class="feed-list"></div>
+
+          <div id="emptyFeed" class="empty-state hidden">
+            <div class="empty-icon">□</div>
+            <h3>ยังไม่มีโพสต์ใหม่</h3>
+            <p>โพสต์ที่เกิน 24 ชั่วโมงจะถูกซ่อนออกจากหน้าฟีดปกติโดยอัตโนมัติ</p>
+            <button class="primary-btn" id="emptyCreateBtn">
+              สร้างโพสต์ใหม่
+            </button>
+          </div>
+        </section>
+
+        <section class="page" id="adminPage">
+          <div class="section-header">
+            <div>
+              <h3>จัดการโพสต์ทั้งหมด</h3>
+              <p>ตรวจสอบโพสต์ทั้งหมด สถานะ และเวลาหมดอายุ</p>
+            </div>
+
+            <button class="danger-outline-btn" id="runCleanupBtn">
+              ซ่อนโพสต์ที่ครบ 24 ชั่วโมง
+            </button>
+          </div>
+
+          <div class="stats-grid">
+            <article class="stat-card">
+              <span>โพสต์ที่กำลังแสดง</span>
+              <strong id="activeCount">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>ใกล้หมดอายุ</span>
+              <strong id="expiringCount">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>โพสต์ที่ถูกซ่อน</span>
+              <strong id="expiredCount">0</strong>
+            </article>
+            <article class="stat-card">
+              <span>เวลาที่ตรวจสอบล่าสุด</span>
+              <strong id="lastCleanup">-</strong>
+            </article>
+          </div>
+
+          <div
+            class="filter-tabs"
+            role="tablist"
+            aria-label="Post status filters"
+          >
+            <button class="tab active" data-filter="all">ทั้งหมด</button>
+            <button class="tab" data-filter="active">กำลังแสดง</button>
+            <button class="tab" data-filter="expiring">ใกล้หมดอายุ</button>
+            <button class="tab" data-filter="expired">หมดอายุ / ซ่อนแล้</button>
+          </div>
+
+          <div class="table-card">
+            <table>
+              <thead>
+                <tr>
+                  <th>หัวข้อโพสต์</th>
+                  <th>ผู้โพสต์</th>
+                  <th>วันที่สร้าง</th>
+                  <th>หมดอายุ</th>
+                  <th>สถานะ</th>
+                  <th>จัดการ</th>
+                </tr>
+              </thead>
+              <tbody id="adminTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="page" id="detailPage">
+          <button class="back-btn" id="backToAdminBtn">← ← กลับ</button>
+
+          <div class="detail-card">
+            <div>
+              <p class="eyebrow">รายละเอียดโพสต์</p>
+              <h3 id="detailTitle">หัวข้อโพสต์</h3>
+              <dl class="detail-list">
+                <div>
+                  <dt>ผู้โพสต์</dt>
+                  <dd id="detailAuthor">-</dd>
+                </div>
+                <div>
+                  <dt>วันที่สร้าง</dt>
+                  <dd id="detailCreatedAt">-</dd>
+                </div>
+                <div>
+                  <dt>หมดอายุ</dt>
+                  <dd id="detailExpiresAt">-</dd>
+                </div>
+                <div>
+                  <dt>สถานะ</dt>
+                  <dd><span id="detailStatus" class="status-badge">-</span></dd>
+                </div>
+              </dl>
+
+              <div class="content-preview">
+                <h4>เนื้อหา</h4>
+                <p id="detailContent">-</p>
+              </div>
+            </div>
+
+            <aside class="system-message">
+              <h4>ข้อความจากระบบ</h4>
+              <p id="detailSystemMessage">
+                ระบบจะตรวจสอบเวลาของโพสต์และซ่อนออกจากหน้าฟีดเมื่อครบ 24 ชั่วโมง
+              </p>
+            </aside>
+          </div>
+
+          <div class="action-row">
+            <button class="secondary-btn" id="restoreBtn">
+              นำกลับมาแสดง
+            </button>
+            <button class="danger-btn" id="deleteBtn">
+              ลบถาวร
+            </button>
+            <button class="secondary-btn" id="closeDetailBtn">ปิด</button>
+          </div>
+        </section>
+
+        <section class="page" id="flowPage">
+          <div class="section-header">
+            <div>
+              <h3>ลำดับการทำงานของระบบ</h3>
+              <p>ขั้นตอนการทำงานของระบบหลังบ้าน</p>
+            </div>
+          </div>
+
+          <div class="flow-card">
+            <div class="flow-step">1. User creates post</div>
+            <div class="flow-step">2. System saves <code>created_at</code></div>
+            <div class="flow-step">
+              3. System calculates
+              <code>expires_at = created_at + 24 hours</code>
+            </div>
+            <div class="flow-step">4. Post appears on normal feed</div>
+            <div class="flow-step">5. System checks time periodically</div>
+            <div class="flow-step">
+              6. If current time ≥ <code>expires_at</code>
+            </div>
+            <div class="flow-step">7. Change status to Hidden / Expired</div>
+            <div class="flow-step">8. Remove from normal feed</div>
+            <div class="flow-step">9. Admin can still view post history</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="toast hidden" id="toast"></div>
+
+    <script src="Aphisit_auto_remove_24h_post_prototype.js"></script>
+  </body>
+</html>

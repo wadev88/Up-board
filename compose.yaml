@@ -1,0 +1,107 @@
+# Local development stack for UP Board (ADR-002 decision 10).
+# Production runs on Vercel (frontend) + Render (backend, worker, PostgreSQL) per ADR-001.
+#
+#   cp .env.example .env   # then edit the values
+#   docker compose up --build
+#
+# Frontend: http://localhost:3000   API docs: http://localhost:8000/docs
+# No e-mails are sent: the mailbox is verified by the first Google sign-in (ADR-003).
+
+x-backend-env: &backend-env
+  ENVIRONMENT: development
+  DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:?Set POSTGRES_USER in .env}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@db:5432/${POSTGRES_DB:?Set POSTGRES_DB in .env}
+  JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET (>= 32 chars) in .env}
+  CORS_ORIGINS: http://localhost:3000
+  FRONTEND_URL: http://localhost:3000
+  PUBLIC_API_URL: http://localhost:8000
+  STORAGE_BACKEND: local
+  UPLOAD_DIR: /app/uploads
+  # Google sign-in through Supabase Auth (ADR-003) — optional locally; empty = password login only
+  SUPABASE_URL: ${SUPABASE_URL:-}
+  SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET:-}
+  # local development keeps email/password sign-up; production uses Google (ADR-003)
+  PASSWORD_SIGNUP_ENABLED: ${PASSWORD_SIGNUP_ENABLED:-true}
+  SPAM_POLICY_ENABLED: ${SPAM_POLICY_ENABLED:-true}
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB: ${POSTGRES_DB}
+    secrets:
+      - postgres_password
+    volumes:
+      - upboard-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # One-shot: apply Alembic migrations and seed reference data (+ demo data).
+  migrate:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      <<: *backend-env
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-}
+    command: sh -c "alembic upgrade head && python /app/database/seeders/seed.py --demo"
+    healthcheck:
+      disable: true
+    depends_on:
+      db:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment: *backend-env
+    ports:
+      - "8000:8000"
+    volumes:
+      - upboard-uploads:/app/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  # APScheduler worker runs as its own process (never inside API workers).
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment: *backend-env
+    command: python -m app.worker
+    healthcheck:
+      disable: true   # the image's HEALTHCHECK probes the API port, which the worker does not serve
+    volumes:
+      - upboard-uploads:/app/uploads
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000/api/v1
+        # public values only (the anon / publishable key is designed to be public)
+        NEXT_PUBLIC_SUPABASE_URL: ${SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY:-}
+    ports:
+      - "3001:3000"
+    depends_on:
+      - api
+
+volumes:
+  upboard-db-data:
+  upboard-uploads:
+
+secrets:
+  postgres_password:
+    environment: POSTGRES_PASSWORD
