@@ -15,7 +15,6 @@ services:
     plan: free
     autoDeploy: false            # deployed by .github/workflows/cd.yml after CI passes
     healthCheckPath: /api/v1/health
-    preDeployCommand: alembic upgrade head && python /app/database/seeders/seed.py
     envVars: &backend-env
       - key: ENVIRONMENT
         value: production
@@ -56,12 +55,3 @@ services:
       - key: BOOTSTRAP_ADMIN_PASSWORD
         sync: false
 
-  - type: worker
-    name: upboard-worker
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: .
-    plan: starter                # background workers are not available on the free plan
-    autoDeploy: false
-    dockerCommand: python -m app.worker
-    envVars: *backend-env
